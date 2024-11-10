@@ -1,70 +1,70 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.Buffer;
 
 public class Main {
-  public static void main(String[] args){
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    // System.out.println("Logs from your program will appear here!");
+    public static void main(String[] args) {
+        ServerSocket serverSocket = null;
+        Socket clientSocket = null;
+        int port = 6379;
+        try {
+            // 创建一个服务端套接字
+            serverSocket = new ServerSocket(port);
+            // 重复使用本地端口和ip地址
+            serverSocket.setReuseAddress(true);
 
-    //  Uncomment this block to pass the first stage
-    ServerSocket serverSocket = null;
-    Socket clientSocket = null;
-    int port = 6379;
-    try {
-      // 创建一个服务端套接字
-      serverSocket = new ServerSocket(port);
-      // 重复使用本地端口和ip地址
-      serverSocket.setReuseAddress(true);
-      // accept函数 -> 进入阻塞，等待客户端连接
-      clientSocket = serverSocket.accept();
-
-      while(true){
-        byte[] input = inputIoStream(clientSocket);
-        chooseCommand(input, clientSocket);
-      }
-    } catch (IOException e) {
-      System.out.println("IOException: " + e.getMessage());
-    } finally {
-      try {
-        if (clientSocket != null) {
-          clientSocket.close();
+            while (true) {
+                // accept函数 -> 进入阻塞，等待客户端连接
+                clientSocket = serverSocket.accept();
+                // 创建多线程
+                Socket finalClientSocket = clientSocket;
+                new Thread(() -> {
+                    try {
+                        // 打印客户端连接信息
+                        System.out.println("New client connected: " +
+                                finalClientSocket.getInetAddress().getHostAddress());
+                        // 读取客户端发送的数据
+                        inputIoStream(finalClientSocket);
+                        // choose command
+//                        chooseCommand(input, finalClientSocket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }).start();
+            }
+        } catch (IOException e) {
+            System.out.println("IOException: " + e.getMessage());
+        } finally {
+            try {
+                if (clientSocket != null) {
+                    clientSocket.close();
+                }
+            } catch (IOException e) {
+                System.out.println("IOException: " + e.getMessage());
+            }
         }
-      } catch (IOException e) {
-        System.out.println("IOException: " + e.getMessage());
-      }
     }
-  }
 
-  // 输入流转换为字符数组
-  public static byte[] inputIoStream(Socket clientSocket){
-    // 获取客户端输入的字符串
-    String input = "";
-    // 流输入
-    try {
-      // 获取数据的通道
-      InputStream inputStream = clientSocket.getInputStream();
-      byte[] buffer = new byte[1024];
-      int bytesRead = inputStream.read(buffer);
-      input = new String(buffer, 0, bytesRead);
-      return input.getBytes();
-    } catch (IOException e) {
-        throw new RuntimeException(e);
+    // 读取数组
+    public static void inputIoStream(Socket clientSocket) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+        String line = null;
+        int commandNumber = 0;
+        while((line  = reader.readLine()) != null){
+            System.out.println("input: " + line);
+            if(line.toLowerCase().contains("ping")){
+                clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+            }
+        }
     }
-  }
 
-  public static void chooseCommand(byte[] input, Socket clientSocket){
-    // 命令选择
-    String command = new String(input);
-    // 流输出
-    OutputStream outputStream = null;
-    try {
-      outputStream = clientSocket.getOutputStream();
-      outputStream.write("+PONG\r\n".getBytes());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    public static void chooseCommand(String input, Socket clientSocket) throws IOException {
+//        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));;
+        // 选择命令
+//        if (input.contains("PING")) {
+//            clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+//        }
+        clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
     }
-  }
 }
