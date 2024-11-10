@@ -2,8 +2,13 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.Buffer;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Main {
+
+    private final static Map<String,String> map = new HashMap<>();
+
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
         Socket clientSocket = null;
@@ -48,7 +53,6 @@ public class Main {
     public static void inputIoAndChooseCommandToRun(Socket clientSocket) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         String line = null;
-        int commandNumber = 0;
         while((line  = reader.readLine()) != null){
             System.out.println("input: " + line);
             if(line.toLowerCase().contains("ping")){
@@ -58,6 +62,24 @@ public class Main {
                 reader.readLine();
                 line = reader.readLine();
                 clientSocket.getOutputStream().write(("+"+line+"\r\n").getBytes());
+            }
+            else if (line.toLowerCase().contains("set")){
+                reader.readLine();
+                String key = reader.readLine();
+                reader.readLine();
+                String value = reader.readLine();
+                map.put(key,value);
+                clientSocket.getOutputStream().write("+OK\r\n".getBytes());
+            }
+            else if (line.toLowerCase().contains("get")){
+                reader.readLine();
+                String key = reader.readLine();
+                String value = map.get(key);
+                if(value == null){
+                    clientSocket.getOutputStream().write("$-1\r\n".getBytes());
+                }else{
+                    clientSocket.getOutputStream().write(("+"+value+"\r\n").getBytes());
+                }
             }
         }
     }
