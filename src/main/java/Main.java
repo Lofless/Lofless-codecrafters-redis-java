@@ -24,10 +24,8 @@ public class Main {
                         // 打印客户端连接信息
                         System.out.println("New client connected: " +
                                 finalClientSocket.getInetAddress().getHostAddress());
-                        // 读取客户端发送的数据
-                        inputIoStream(finalClientSocket);
-                        // choose command
-//                        chooseCommand(input, finalClientSocket);
+                        // 获取数据并运行代码
+                        inputIoAndChooseCommandToRun(finalClientSocket);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -47,7 +45,7 @@ public class Main {
     }
 
     // 读取数组
-    public static void inputIoStream(Socket clientSocket) throws IOException {
+    public static void inputIoAndChooseCommandToRun(Socket clientSocket) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         String line = null;
         int commandNumber = 0;
@@ -56,15 +54,20 @@ public class Main {
             if(line.toLowerCase().contains("ping")){
                 clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
             }
+            else if (line.toLowerCase().contains("echo")) {
+                reader.readLine();
+                line = reader.readLine();
+                clientSocket.getOutputStream().write(("+"+line+"\r\n").getBytes());
+            }
         }
     }
 
-    public static void chooseCommand(String input, Socket clientSocket) throws IOException {
-//        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));;
-        // 选择命令
-//        if (input.contains("PING")) {
-//            clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
-//        }
-        clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
-    }
+//    public static void chooseCommand(String input, Socket clientSocket) throws IOException {
+////        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));;
+//        // 选择命令
+////        if (input.contains("PING")) {
+////            clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+////        }
+//        clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
+//    }
 }
