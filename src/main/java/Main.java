@@ -9,6 +9,8 @@ public class Main {
 
     private final static Map<String,String> map = new HashMap<>();
     private static String role = "master";
+    private static final String master_replid = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
+    private static final int master_repl_offset = 0;
 
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
@@ -111,18 +113,24 @@ public class Main {
                 // 获取当前端口号
                 int port = clientSocket.getPort();
                 System.out.println("port: " + port);
-                if(role.equals("master")) clientSocket.getOutputStream().write("$11\r\nrole:master\r\n".getBytes());
-                else clientSocket.getOutputStream().write("$10\r\nrole:slave\r\n".getBytes());
+                StringBuilder sb = new StringBuilder();
+                sb.append("role:").append(role).append("\n");
+                sb.append("master_replid:8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb\n");
+                sb.append("master_repl_offset:0");
+                writeClinetResponse(sb.toString(), clientSocket);
             }
         }
     }
 
-//    public static void chooseCommand(String input, Socket clientSocket) throws IOException {
-////        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));;
-//        // 选择命令
-////        if (input.contains("PING")) {
-////            clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
-////        }
-//        clientSocket.getOutputStream().write("+PONG\r\n".getBytes());
-//    }
+    public static void writeClinetResponse(String response, Socket clientSocket) throws IOException {
+        byte[] responseInBytes;
+        if(response == null){
+            responseInBytes = "$-1\r\n".getBytes();
+        }else{
+            responseInBytes =
+                    String.format("$%s\r\n%s\r\n", response.length(), response)
+                            .getBytes();
+        }
+        clientSocket.getOutputStream().write(responseInBytes);
+    }
 }
