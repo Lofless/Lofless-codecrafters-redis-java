@@ -66,10 +66,29 @@ public class Main {
             else if (line.toLowerCase().contains("set")){
                 reader.readLine();
                 String key = reader.readLine();
+                System.out.println("key: " + key);
                 reader.readLine();
                 String value = reader.readLine();
+                System.out.println("value: " + value);
                 map.put(key,value);
                 clientSocket.getOutputStream().write("+OK\r\n".getBytes());
+                // expire time
+                reader.readLine();
+                String type = reader.readLine();
+                if("px".equalsIgnoreCase(type)){
+                    reader.readLine();
+                    String expireTime = reader.readLine();
+                    System.out.println("expireTime: " + expireTime);
+                    int expireTimeInt = Integer.parseInt(expireTime);
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(expireTimeInt);
+                            map.remove(key);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).start();
+                }
             }
             else if (line.toLowerCase().contains("get")){
                 reader.readLine();
@@ -80,6 +99,9 @@ public class Main {
                 }else{
                     clientSocket.getOutputStream().write(("+"+value+"\r\n").getBytes());
                 }
+            }
+            else{
+
             }
         }
     }
