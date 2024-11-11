@@ -103,8 +103,8 @@ public class Main {
                     clientSocket.getOutputStream().write(("+"+value+"\r\n").getBytes());
                 }
             }
-            else{
-
+            else if (line.toLowerCase().contains("info")){
+                clientSocket.getOutputStream().write("$11\r\nrole:master\r\n".getBytes());
             }
         }
     }
