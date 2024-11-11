@@ -8,6 +8,7 @@ import java.util.Map;
 public class Main {
 
     private final static Map<String,String> map = new HashMap<>();
+    private static String role = "master";
 
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
@@ -15,6 +16,9 @@ public class Main {
         int port = args.length > 1 ? Integer.parseInt(args[1]) : 6379;
         for (int i = 0; i < args.length; i++) {
             System.out.println(args[i]);
+            if(args[i].equals("--replicaof")){
+                role = "slave";
+            }
         }
         try {
             // 创建一个服务端套接字
@@ -104,7 +108,11 @@ public class Main {
                 }
             }
             else if (line.toLowerCase().contains("info")){
-                clientSocket.getOutputStream().write("$11\r\nrole:master\r\n".getBytes());
+                // 获取当前端口号
+                int port = clientSocket.getPort();
+                System.out.println("port: " + port);
+                if(role.equals("master")) clientSocket.getOutputStream().write("$11\r\nrole:master\r\n".getBytes());
+                else clientSocket.getOutputStream().write("$10\r\nrole:slave\r\n".getBytes());
             }
         }
     }
