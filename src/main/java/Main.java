@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.Buffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +21,9 @@ public class Main {
             System.out.println(args[i]);
             if(args[i].equals("--replicaof")){
                 role = "slave";
+                if(i == args.length - 2){
+                    handShake(args[i+1].split(" "));
+                }
             }
         }
         try {
@@ -58,7 +62,7 @@ public class Main {
         }
     }
 
-    // 读取数组
+    // 读取数据
     public static void inputIoAndChooseCommandToRun(Socket clientSocket) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         String line = null;
@@ -122,6 +126,7 @@ public class Main {
         }
     }
 
+    // 客户端响应
     public static void writeClinetResponse(String response, Socket clientSocket) throws IOException {
         byte[] responseInBytes;
         if(response == null){
@@ -133,4 +138,27 @@ public class Main {
         }
         clientSocket.getOutputStream().write(responseInBytes);
     }
+
+    // HandShake
+    public static void handShake(String[] IpAndPost){
+        System.out.println("HandShake");
+        String ip = IpAndPost[0];
+        int port = Integer.parseInt(IpAndPost[1]);
+        // 第一阶段：发送PING
+        String ping = "*1\r\n$4\r\nPING\r\n";
+        sendData(ip, port, ping);
+    }
+
+    public static void sendData(String ip, int port, String data) {
+        try{
+            Socket socket = new Socket(ip, port);
+            OutputStream outputStream = socket.getOutputStream();
+            outputStream.write(data.getBytes());
+            outputStream.flush();
+            socket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
