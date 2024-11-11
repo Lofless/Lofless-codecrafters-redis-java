@@ -12,7 +12,10 @@ public class Main {
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
         Socket clientSocket = null;
-        int port = 6379;
+        int port = args.length > 1 ? Integer.parseInt(args[1]) : 6379;
+        for (int i = 0; i < args.length; i++) {
+            System.out.println(args[i]);
+        }
         try {
             // 创建一个服务端套接字
             serverSocket = new ServerSocket(port);
@@ -28,7 +31,7 @@ public class Main {
                     try {
                         // 打印客户端连接信息
                         System.out.println("New client connected: " +
-                                finalClientSocket.getInetAddress().getHostAddress());
+                                finalClientSocket.getInetAddress());
                         // 获取数据并运行代码
                         inputIoAndChooseCommandToRun(finalClientSocket);
                     } catch (IOException e) {
