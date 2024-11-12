@@ -126,7 +126,7 @@ public class Main {
                 clientSocket.getOutputStream().write("+OK\r\n".getBytes());
             }
             else if(line.toLowerCase().contains("psync")){
-//                clientSocket.getOutputStream().write("+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n".getBytes());
+                clientSocket.getOutputStream().write("+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n".getBytes());
             }
         }
     }
