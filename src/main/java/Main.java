@@ -123,6 +123,9 @@ public class Main {
                 sb.append("master_repl_offset:0");
                 writeClinetResponse(sb.toString(), clientSocket);
             }
+            else if(line.toLowerCase().contains("replconf")){
+                clientSocket.getOutputStream().write("+OK\r\n".getBytes());
+            }
         }
     }
 
@@ -144,21 +147,23 @@ public class Main {
         System.out.println("HandShake");
         String ip = IpAndPost[0];
         int port = Integer.parseInt(IpAndPost[1]);
+        System.out.println("ip: " + ip);
+        System.out.println("port: " + port);
         // 第一阶段：发送PING
         String ping = "*1\r\n$4\r\nPING\r\n";
         sendData(ip, port, ping);
     }
 
     public static void sendData(String ip, int port, String data) {
-        try{
+        try {
             Socket socket = new Socket(ip, port);
             OutputStream outputStream = socket.getOutputStream();
             outputStream.write(data.getBytes());
             outputStream.flush();
             socket.close();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.err.println("Error sending data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
-
 }
