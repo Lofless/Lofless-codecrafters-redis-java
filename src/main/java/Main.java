@@ -125,6 +125,9 @@ public class Main {
             else if(line.toLowerCase().contains("replconf")){
                 clientSocket.getOutputStream().write("+OK\r\n".getBytes());
             }
+            else if(line.toLowerCase().contains("psync")){
+//                clientSocket.getOutputStream().write("+FULLRESYNC 8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb 0\r\n".getBytes());
+            }
         }
     }
 
@@ -166,12 +169,21 @@ public class Main {
                 outputStream.write(replConf.getBytes());
                 outputStream.flush();
                 System.out.println("Sent REPLCONF listening-port 6380 to master");
+            }
 
+            response = reader.readLine();
+            if(response != null && response.contains("OK")) {
                 // 这里可以进一步等待和处理主节点的其他响应（如果有）
                 String replConf2 = "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n";
                 outputStream.write(replConf2.getBytes());
                 outputStream.flush();
+            }
 
+            response = reader.readLine();
+            if(response != null && response.contains("OK")) {
+                String replConf3 = "*3\r\n$5\r\nPSYNC\r\n$1\r\n?\r\n$2\r\n-1\r\n";
+                outputStream.write(replConf3.getBytes());
+                outputStream.flush();
             }
 
         } catch (IOException e) {
