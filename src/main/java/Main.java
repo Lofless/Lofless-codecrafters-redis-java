@@ -10,8 +10,6 @@ public class Main {
 
     private final static Map<String,String> map = new HashMap<>();
     private static String role = "master";
-    private static final String master_replid = "8371b4fb1155b71f4a04d3e1bc3e18c4a990aeeb";
-    private static final int master_repl_offset = 0;
 
     public static void main(String[] args) {
         ServerSocket serverSocket = null;
@@ -22,6 +20,7 @@ public class Main {
             if(args[i].equals("--replicaof")){
                 role = "slave";
                 if(i == args.length - 2){
+                    System.out.println("args[i+1]: "+args[i+1]);
                     handShake(args[i+1].split(" "));
                 }
             }
@@ -135,9 +134,7 @@ public class Main {
         if(response == null){
             responseInBytes = "$-1\r\n".getBytes();
         }else{
-            responseInBytes =
-                    String.format("$%s\r\n%s\r\n", response.length(), response)
-                            .getBytes();
+            responseInBytes = String.format("$%s\r\n%s\r\n", response.length(), response).getBytes();
         }
         clientSocket.getOutputStream().write(responseInBytes);
     }
@@ -149,10 +146,40 @@ public class Main {
         int port = Integer.parseInt(IpAndPost[1]);
         System.out.println("ip: " + ip);
         System.out.println("port: " + port);
-        // 第一阶段：发送PING
-        String ping = "*1\r\n$4\r\nPING\r\n";
-        sendData(ip, port, ping);
+
+        try (Socket socket = new Socket(ip, port);
+             OutputStream outputStream = socket.getOutputStream();
+             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            // 第一阶段：发送 PING
+            String ping = "*1\r\n$4\r\nPING\r\n";
+            outputStream.write(ping.getBytes());
+            outputStream.flush();
+
+            // 等待接收 PONG 响应
+            String response = reader.readLine();
+            if (response != null && response.contains("PONG")) {
+                System.out.println("Received PONG from master");
+
+                // 第二阶段：发送 REPLCONF listening-port 6380
+                String replConf = "*3\r\n$8\r\nREPLCONF\r\n$14\r\nlistening-port\r\n$4\r\n6380\r\n";
+                outputStream.write(replConf.getBytes());
+                outputStream.flush();
+                System.out.println("Sent REPLCONF listening-port 6380 to master");
+
+                // 这里可以进一步等待和处理主节点的其他响应（如果有）
+                String replConf2 = "*3\r\n$8\r\nREPLCONF\r\n$4\r\ncapa\r\n$6\r\npsync2\r\n";
+                outputStream.write(replConf2.getBytes());
+                outputStream.flush();
+
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error during handshake: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
+
 
     public static void sendData(String ip, int port, String data) {
         try {
